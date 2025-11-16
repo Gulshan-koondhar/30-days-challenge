@@ -14,16 +14,16 @@
 
 **Q:What defines an AI-driven developer?**
 
-**Ans:**Createscontext-aware prompts
+**Ans:** Createscontext-aware prompts
 
 **Q:What does “AIDD” stand for?**
 
-**Ans:**AI-DrivenDevelopment
+**Ans:** AI-DrivenDevelopment
 
 **Q:What is the focus of Evaluation-Driven Development (EvDD)?**
 
-**Ans:**Evaluating andimproving AI outputs
+**Ans:** Evaluating andimproving AI outputs
 
 **Q:What should developers focus on in the AI era?**
 
-**Ans:**Building reasoning+ evaluation skills
+**Ans:** Building reasoning+ evaluation skills
