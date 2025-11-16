@@ -1,6 +1,6 @@
 **Question: What does AI-Driven Development mean to you?**
 
-**Answer:**AI-DrivenDevelopment is a new way to develop Applications/Software just by writing thespecifications and features of that Application. In AI-Driven Development, theAI is basically a partner with us for writing code, fixing errors and runningapplications. We only give them the instructions about what to do and how todo, then AI will follow our instructions and make applications according tothose instructions.
+**Answer:** AI-DrivenDevelopment is a new way to develop Applications/Software just by writing thespecifications and features of that Application. In AI-Driven Development, theAI is basically a partner with us for writing code, fixing errors and runningapplications. We only give them the instructions about what to do and how todo, then AI will follow our instructions and make applications according tothose instructions.
 
 **Question: How do you see the future of Human–AI Collaboration in software development?**
 
