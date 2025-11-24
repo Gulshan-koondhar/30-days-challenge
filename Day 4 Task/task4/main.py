@@ -1,14 +1,20 @@
+import asyncio
 import os
 import streamlit as st
-import asyncio
-from pypdf import PdfReader
-from agents import Agent, function_tool, Runner, AsyncOpenAI, OpenAIChatCompletionsModel
 from dotenv import load_dotenv
-import tempfile
+from PyPDF2 import PdfReader
+from agents import Agent, function_tool, AsyncOpenAI, OpenAIChatCompletionsModel, Runner
+# from openai_agents import OpenAIAgentFactory
+# from openai_agents.tools import tool
 
+# Load environment variables
 load_dotenv()
 
-def extract_pdf_text(file_path: str) -> str:
+# Set up the Gemini API key
+os.environ["GEMINI_API_KEY"] = os.getenv("GEMINI_API_KEY")
+
+
+def extract_pdf_text_func(file_path: str) -> str:
     """
     Extracts text from a PDF file.
 
@@ -16,135 +22,64 @@ def extract_pdf_text(file_path: str) -> str:
         file_path: The path to the PDF file.
 
     Returns:
-        The extracted raw plain text from the PDF.
+        The extracted text.
     """
-    reader = PdfReader(file_path)
-    text = ""
-    for page in reader.pages:
-        text += page.extract_text() or ""
+    with open(file_path, "rb") as f:
+        reader = PdfReader(f)
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text()
     return text
-
+extract_pdf_text = function_tool(extract_pdf_text_func)
 @function_tool
-async def generate_quiz(text: str) -> str:
+def generate_quiz(text: str) -> str:
     """
-    Generates a multiple-choice or mixed quiz based on the provided text.
-    This tool is called by the main agent to generate the quiz content directly.
+    Generates a quiz from the given text.
 
     Args:
-        text: The text content from which to generate the quiz.
+        text: The text to generate the quiz from.
 
     Returns:
-        A string containing the generated quiz.
+        The generated quiz.
     """
-    # This tool's role is to formulate the LLM call for quiz generation
-    # based on the text provided. The main agent will use this tool.
-    # The actual LLM call for quiz generation needs to happen *here* within the tool,
-    # as instructed by the "Every function must match the tool documentation exactly." rule.
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    if not gemini_api_key:
-        raise ValueError("GEMINI_API_KEY environment variable not set.")
-
-    external_Client = AsyncOpenAI(
-        api_key=gemini_api_key,
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-    )
-    
-    model = OpenAIChatCompletionsModel(
-        model= "gemini-2.0-flash",
-        openai_client=external_Client
-    )
-
-    # Create a temporary agent for quiz generation within the tool itself
-    quiz_agent = Agent(
-        name="QuizGenerator",
-        instructions="You are an expert quiz generator. Create a multiple-choice or mixed quiz based on the provided text.",
-        model=model,
-        tools=[] # No tools needed for this internal agent
-    )
-
-    quiz_prompt = f"Generate a detailed quiz (mix of MCQs and open-ended questions if possible) from the following text:\n\n{text}\n\nEnsure there are at least 5 questions. Provide answers after the questions."
-    quiz_result = await Runner.run(quiz_agent, quiz_prompt)
-    return quiz_result.final_output
+    return text  # Placeholder for quiz generation
 
 
-# Agent Setup
-gemini_api_key = os.getenv("GEMINI_API_KEY")
-if not gemini_api_key:
-    raise ValueError("GEMINI_API_KEY environment variable not set.")
-
+# Configure the agent
 external_Client = AsyncOpenAI(
-  api_key=gemini_api_key,
+  api_key=os.getenv("GEMINI_API_KEY"),
   base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
 )
 model = OpenAIChatCompletionsModel(
     model= "gemini-2.0-flash",
     openai_client=external_Client
 )
-
-study_agent = Agent(
-    name="StudyNotesAssistant",
-    instructions="You are a Study Notes Assistant. Your task is to first provide a concise summary of the given text, and then generate a detailed quiz (mix of MCQs and open-ended questions if possible) from the text using the 'generate_quiz' tool. Format your final output with a 'Summary:' heading followed by the summary, and a 'Quiz:' heading followed by the quiz content.",
+agent = Agent(
+    name="StudyNotesAgent",
     model=model,
-    tools=[generate_quiz]
+    tools=[extract_pdf_text, generate_quiz],
+    instructions="You are a Study Notes Assistant. First summarize the provided PDF content, then generate a quiz based on it.",
 )
 
-async def main_async():
-    st.set_page_config(page_title="Study Notes & Quiz Generator")
-    st.title("📚 Study Notes Assistant")
+st.title("PDF Study Notes Assistant")
 
-    uploaded_file = st.file_uploader("Upload a PDF document", type=["pdf"])
+uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
 
-    if uploaded_file:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-            tmp_file.write(uploaded_file.getvalue())
-            tmp_file_path = tmp_file.name
+if uploaded_file is not None:
+    # Save the uploaded file to a temporary location
+    with open("temp.pdf", "wb") as f:
+        f.write(uploaded_file.getbuffer())
 
-        st.success("PDF uploaded successfully! Processing...")
+    # Extract text from the PDF
+    extracted_text = extract_pdf_text_func("temp.pdf")
 
-        try:
-            extracted_text = extract_pdf_text(tmp_file_path)
-            st.session_state['extracted_text'] = extracted_text
+    # Display the summary
+    st.header("Summary")
+    summary = asyncio.run(Runner.run(agent,f"Summarize the following text:\n{extracted_text}"))
+    st.write(summary.final_output)
 
-            with st.spinner("Generating summary and quiz..."):
-                agent_result = await Runner.run(study_agent, extracted_text)
-                full_output = agent_result.final_output
-
-                summary_content = "No summary found."
-                quiz_content = "No quiz found."
-
-                summary_marker = "Summary:"
-                quiz_marker = "Quiz:"
-
-                summary_start_index = full_output.find(summary_marker)
-                quiz_start_index = full_output.find(quiz_marker)
-
-                if summary_start_index != -1:
-                    if quiz_start_index != -1 and quiz_start_index > summary_start_index:
-                        summary_content = full_output[summary_start_index + len(summary_marker):quiz_start_index].strip()
-                        quiz_content = full_output[quiz_start_index + len(quiz_marker):].strip()
-                    else:
-                        summary_content = full_output[summary_start_index + len(summary_marker):].strip()
-                elif quiz_start_index != -1:
-                    quiz_content = full_output[quiz_start_index + len(quiz_marker):].strip()
-                else:
-                    st.subheader("Agent Output (Unable to parse into Summary and Quiz):")
-                    st.markdown(full_output)
-
-
-                if summary_content != "No summary found.":
-                    st.subheader("Summary:")
-                    st.markdown(summary_content)
-                    st.session_state['summary'] = summary_content
-
-                if quiz_content != "No quiz found.":
-                    st.subheader("Generated Quiz:")
-                    st.markdown(quiz_content)
-                    st.session_state['quiz'] = quiz_content
-                
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
-        finally:
-            os.remove(tmp_file_path)
-
-if __name__ == "__main__":
-    asyncio.run(main_async())
+    # Create a quiz
+    if st.button("Create Quiz"):
+        st.header("Quiz")
+        quiz = asyncio.run(Runner.run(agent, f"Generate a quiz from the following text:\n{extracted_text}"))
+        st.write(quiz.final_output)

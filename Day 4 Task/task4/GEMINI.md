@@ -1,177 +1,174 @@
-### **Role: Senior Python AI Engineer**
+1. Project Overview
 
----
+Your mission is to build an AI Agent capable of:
 
-## **1. Project Overview**
+Extracting text from PDFs (PyPDF)
 
-You need to build an AI Agent that:
+Generating a clean, meaningful summary
 
-* **Reads a PDF** (using PyPDF)
-* **Generates a summary**
-* **Creates a quiz** (MCQs or mixed quiz)
-* **UI:** Streamlit (recommended) or HTML/CSS
-* **Backend:** OpenAgents SDK
-* **Model:** Gemini (via Gemini CLI)
-* **Tools:** Context7 MCP server (Docs Reader Tool)
+Creating a quiz (MCQs or mixed format)
 
----
+Frontend: Streamlit (recommended) or HTML/CSS
 
-## **2. Strict Technical Rules**
+Backend / Agent: OpenAgents SDK
 
-These rules are extremely important — you must follow them exactly:
+Model: Gemini (via Gemini CLI)
 
-### **1) Zero-Bloat Rule**
+Tool Provider: Context7 MCP (Docs Reader Tool)
 
-* Do **not** add unnecessary code.
-* Write only what is required for the task.
-* No extra decorators, comments, or over-engineered error handling.
+2. Strict Technical Rules
 
-### **2) API Configuration (IMPORTANT)**
+These rules must be followed exactly, with no exceptions.
 
-Use:
+1. Zero-Bloat Protocol
 
-* **OpenAgents SDK**
-* **Gemini base URL:**
-  `https://generativelanguage.googleapis.com/v1beta/openai/`
-* **Model:** `gemini-2.0-flash`
-* **API key:** via environment variable `GEMINI_API_KEY`
+Write only the required logic.
 
-### **3) SDK Syntax Rule**
+No additional decorators, helper classes, or UI components.
 
-* You **must NOT** use the standard `openai` library.
-* Only use **openai-agents SDK**.
-* Every function must match the tool documentation exactly.
+No extra comments or unnecessary error handling.
 
-### **4) Error Recovery**
+2. API Configuration (MANDATORY)
 
-If you encounter:
+You must use:
 
-* `SyntaxError`
-* `ImportError`
-* `AttributeError`
+OpenAgents SDK
 
-→ **Stop immediately** — do NOT guess.
-→ Re-run:
+Gemini Base URL:
+https://generativelanguage.googleapis.com/v1beta/openai/
 
-```
+Model: gemini-2.0-flash
+
+Environment Variable: GEMINI_API_KEY
+
+3. SDK Syntax Compliance
+
+Do not use the standard openai library.
+
+Use only openai-agents syntax exactly as documented.
+
+All tools must exactly match the SDK tool definition format.
+
+4. Error Recovery Protocol
+
+If you encounter any of the following:
+
+SyntaxError
+
+ImportError
+
+AttributeError
+
+→ Stop immediately
+→ Do not guess the solution
+→ Run:
+
 @get-library-docs openai-agents
-```
 
-And verify the correct syntax.
+→ Verify correct syntax before continuing.
 
-### **5) Dependencies**
+5. Dependency Rules
 
-Install packages using `uv`.
+Use uv for installing and managing packages.
 
----
+3. Project File Structure
 
-## **3. Project File Structure (Your Folder Layout)**
+Your task4/ directory (inside Gemini CLI) must follow this structure:
 
-Your Task-4 folder structure inside Gemini CLI will be:
-
-```
 task4/
 ├── .gemini/
-│   └── settings.json
+│ └── settings.json
 ├── gemini.md
 ├── main.py
 ├── pyproject.toml
 ├── README.md
 ├── .env
 └── uv.lock
-```
 
-Everything must remain inside this root folder.
-**Do NOT create any extra subfolders.**
+⚠️ No additional subfolders are allowed.
+All logic must remain inside this root directory.
 
----
+4. Implementation Flow
 
-## **4. Implementation Flow (Step-by-Step)**
+Follow the steps below exactly in order.
 
-Follow this exact sequence:
+Step 1 — Documentation Verification
 
----
+Inside Gemini CLI, run:
 
-### **Step 1 — Load Docs & Verify Syntax**
+@get-library-docs openai-agents
 
-1. Open Gemini CLI
+Review:
 
-2. Run:
+Tool definition patterns
 
-   ```
-   @get-library-docs openai-agents
-   ```
+Agent initialization
 
-3. Review and understand:
+Model invocation syntax
 
-* How tool decorators work
-* How to initialize an agent
-* Model calling format
-* How to register tools inside an agent
+Registering tools with the agent
 
-If anything is unclear → re-read the docs.
+If any step is unclear → repeat the documentation query.
 
----
+Step 2 — Tool Definitions (Inside main.py)
 
-### **Step 2 — Tool Functions (Inside main.py)**
+You must create exactly two tools:
 
-You will create two tools:
+1. extract_pdf_text(file_path)
 
----
+Use PyPDF to open and read the PDF.
 
-#### **1. extract_pdf_text(file_path)**
+Extract all text.
 
-* Use PyPDF
-* Read and extract text from the PDF
-* Return raw plain text
+Return plain raw text.
 
----
+2. generate_quiz(text)
 
-#### **2. generate_quiz(text)**
+Accept the original PDF text.
 
-* Pass the extracted text to the agent
-* The agent will generate MCQs or a mixed quiz
+Send it to the agent.
 
-🔴 **IMPORTANT:**
-The tool definitions **must exactly match** the format shown in `openai-agents` documentation.
+Return a quiz (MCQs or mixed format).
 
----
+Important:
+Tool functions must exactly match the format shown in OpenAgents SDK documentation.
 
-### **Step 3 — Agent Setup (main.py)**
+Step 3 — Agent Configuration (main.py)
 
 You must:
 
-* Set Gemini base URL
-* Use model `gemini-2.0-flash`
-* Bind both tools to the agent
-* Add a static system prompt:
+Set the Gemini base URL.
 
-```
-"You are a Study Notes Assistant. First produce a summary, then generate a quiz."
-```
+Use model: gemini-2.0-flash
 
----
+Register both tools inside the agent.
 
-### **Step 4 — Streamlit UI**
+Add the system prompt:
 
-UI workflow:
+"You are a Study Notes Assistant. First summarize the provided PDF content, then generate a quiz based on it."
 
-1. User uploads a PDF
-2. You extract the text using PyPDF
-3. Display the summary
-4. Show a “Create Quiz” button
-5. Display the generated quiz
+Step 4 — Streamlit UI
 
-You may use any UI components (cards, boxes, containers, etc.)
+The UI must include:
 
----
+PDF file uploader.
 
-## **5. Testing Cases**
+Text extraction step using PyPDF.
 
-Ensure the following:
+Summary display.
 
-1. PDF upload → Summary appears
-2. "Create Quiz" button → Quiz displays
-3. Larger PDF → Better summary + more detailed quiz
+A Create Quiz button.
 
----
+Display of the generated quiz.
+
+UI may use cards, blocks, containers, or simple text—your choice.
+
+5. Testing Requirements
+
+Verify the following cases:
+
+Uploading a PDF produces a valid summary.
+
+Clicking Create Quiz returns a valid quiz.
+
+Larger PDFs lead to richer summaries and more detailed quizzes.
