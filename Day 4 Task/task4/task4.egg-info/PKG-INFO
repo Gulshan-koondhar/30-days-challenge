@@ -1,0 +1,10 @@
+Metadata-Version: 2.4
+Name: task4
+Version: 0.1.0
+Summary: Add your description here
+Requires-Python: >=3.13
+Description-Content-Type: text/markdown
+Requires-Dist: openai-agents>=0.6.1
+Requires-Dist: pypdf>=6.4.0
+Requires-Dist: python-dotenv>=1.2.1
+Requires-Dist: streamlit>=1.51.0
