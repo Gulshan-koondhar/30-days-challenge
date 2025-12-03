@@ -1,0 +1,52 @@
+---
+openapi: 3.0.0
+info:
+  title: Calculator API
+  version: 1.0.0
+paths:
+  /calculate:
+    post:
+      summary: Evaluates a mathematical expression.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                expression:
+                  type: string
+                  description: The mathematical expression to evaluate (e.g., "2+2", "3*5+2").
+              required:
+                - expression
+      responses:
+        '200':
+          description: Successful calculation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: number
+                    description: The numerical result of the expression.
+        '400':
+          description: Invalid input or expression.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Details about the error (e.g., "Invalid Input", "Division by Zero").
+        '500':
+          description: Internal server error during calculation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: An unexpected error occurred.
